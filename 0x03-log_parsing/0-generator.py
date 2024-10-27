@@ -1,21 +1,39 @@
 #!/usr/bin/python3
-'''A script that generates random HTTP request logs.
 '''
-import random
+Log parsing
+'''
 import sys
-import datetime
-from time import sleep
-for i in range(10000):
-    sleep(random.random())
-    sys.stdout.write("{:d}.{:d}.{:d}.{:d} - [{}] \"GET {} {}\" {} {}\n".format(
-        random.randint(1, 255),
-        random.randint(1, 255),
-        random.randint(1, 255),
-        random.randint(1, 255),
-        datetime.datetime.now(),
-        '/projects/1216',
-        'HTTP/1.1',
-        random.choice([200, 301, 400, 401, 403, 404, 405, 500]),
-        random.randint(1, 1024)
-    ))
-    sys.stdout.flush()
+if __name__ == "__main__":
+    '''
+    Run only when not imported
+    '''
+    status = {'200': 0, '301': 0, '400': 0, '401': 0,
+              '403': 0, '404': 0, '405': 0, '500': 0}
+    count = 0
+    size = 0
+    def print_res(status, size):
+        '''
+        Print result
+        '''
+        print("File size: {}".format(size))
+        status = dict(sorted(status.items()))
+        for k, v in status.items():
+            if v > 0:
+                print("{}: {}".format(k, v))
+    try:
+        for line in sys.stdin:
+            count += 1
+            ln = line.split(" ")
+            try:
+                code = ln[-2]
+                size += int(ln[-1])
+                if code in status.keys():
+                    status[code] += 1
+            except BaseException:
+                pass
+            if count == 10:
+                print_res(status, size)
+                count = 0
+    except KeyboardInterrupt:
+        print_res(status, size)
+    print_res(status, size)
